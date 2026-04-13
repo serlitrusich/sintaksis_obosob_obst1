@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Игровой тренажёр: обособленные обстоятельства</title>
+<style>
+  :root {
+    --bg: #fff6fb;
+    --card: #ffffff;
+    --pink-1: #ffd6e8;
+    --pink-2: #ffb3d1;
+    --pink-3: #ff7aaa;
+    --pink-4: #d63384;
+    --pink-5: #8a1451;
+    --ok-bg: #eafff1;
+    --ok-border: #2eaf66;
+    --bad-bg: #fff0f3;
+    --bad-border: #d62839;
+    --shadow: 0 12px 30px rgba(214, 51, 132, 0.14);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background:
+      radial-gradient(circle at top left, #ffe5f0 0, transparent 28%),
+      radial-gradient(circle at top right, #ffd6e8 0, transparent 25%),
+      linear-gradient(180deg, #fff8fc 0%, #ffeef6 100%);
+    color: #4f2340;
+  }
+
+  .page {
+    min-height: 100vh;
+    padding: 24px 14px 40px;
+  }
+
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .hero, .game-card {
+    background: rgba(255,255,255,0.92);
+    border: 2px solid var(--pink-2);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    backdrop-filter: blur(2px);
+  }
+
+  .hero-head, .game-head {
+    background: linear-gradient(135deg, var(--pink-4), var(--pink-3));
+    color: white;
+    padding: 22px 24px;
+  }
+
+  h1, h2, h3 {
+    margin: 0 0 10px;
+  }
+
+  .subtitle {
+    opacity: 0.95;
+    line-height: 1.5;
+  }
+
+  .hero-body, .game-body {
+    padding: 24px;
+  }
+
+  .instructions {
+    display: grid;
+    gap: 12px;
+    margin: 0 0 22px;
+  }
+
+  .instruction {
+    background: linear-gradient(180deg, #fff7fb, #fff0f6);
+    border: 1px solid var(--pink-1);
+    border-radius: 16px;
+    padding: 14px 16px;
+    line-height: 1.5;
+  }
+
+  .btn {
+    appearance: none;
+    border: 0;
+    background: linear-gradient(135deg, var(--pink-4), var(--pink-3));
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(214, 51, 132, 0.18);
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px); }
+  .btn[disabled] { opacity: .55; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, #ff8fbc, #ff6fa7);
+  }
+
+  .btn-correct {
+    background: linear-gradient(135deg, #3ccf7a, #2eaf66) !important;
+    box-shadow: 0 10px 20px rgba(46, 175, 102, 0.18) !important;
+  }
+
+  .hidden { display: none !important; }
+
+  .topbar {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .progress-wrap {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .progress-line {
+    width: 100%;
+    height: 14px;
+    background: #ffe0ec;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid #ffc5dc;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff93be, #d63384);
+    transition: width .25s ease;
+  }
+
+  .progress-text {
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--pink-5);
+  }
+
+  .sentence-panel {
+    background: linear-gradient(180deg, #fff8fc, #fff2f7);
+    border: 1px solid var(--pink-1);
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+
+  .sentence-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--pink-4);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .sentence-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    line-height: 1.8;
+  }
+
+  .word {
+    border: 1px solid #f6b1cd;
+    background: white;
+    color: #5a2a47;
+    padding: 9px 10px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all .15s ease;
+    user-select: none;
+  }
+
+  .word:hover { border-color: #ef6ea6; }
+  .word.selected {
+    background: linear-gradient(135deg, #ffd8e8, #ffb8d2);
+    border-color: var(--pink-4);
+    color: var(--pink-5);
+    font-weight: 700;
+  }
+
+  .step {
+    background: #fff;
+    border: 1px solid #ffd0e2;
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .step-title {
+    margin: 0 0 10px;
+    color: var(--pink-4);
+    font-size: 20px;
+  }
+
+  .step-tip {
+    margin: 0 0 14px;
+    color: #7a4763;
+    line-height: 1.5;
+  }
+
+  .check-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .boundary-zone {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 8px;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #ffd2e4;
+  }
+
+  .token {
+    padding: 12px 10px;
+    background: #fff;
+    font-size: 17px;
+    border-right: 1px solid #ffe1ec;
+  }
+
+  .gap {
+    width: 22px;
+    min-width: 22px;
+    border: 0;
+    background: linear-gradient(180deg, #fff6fa, #ffe9f2);
+    cursor: pointer;
+    position: relative;
+    border-right: 1px solid #ffe1ec;
+  }
+
+  .gap::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: #f6b1cd;
+    border-radius: 999px;
+  }
+
+  .gap.active {
+    background: linear-gradient(180deg, #ffd5e7, #ffb7d3);
+  }
+
+  .gap.active::before {
+    content: ",";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -56%);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--pink-4);
+    z-index: 2;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border-radius: 16px;
+    border: 1px solid #f7bcd4;
+    padding: 14px;
+    font: inherit;
+    color: #592844;
+    background: #fffafd;
+  }
+
+  textarea:focus {
+    outline: 3px solid rgba(214, 51, 132, 0.15);
+    border-color: var(--pink-4);
+  }
+
+  .feedback {
+    margin: 18px 0 0;
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-weight: 800;
+    border-left: 10px solid;
+  }
+
+  .feedback.ok {
+    background: var(--ok-bg);
+    border-color: var(--ok-border);
+    color: #17623a;
+  }
+
+  .feedback.bad {
+    background: var(--bad-bg);
+    border-color: var(--bad-border);
+    color: #a3182b;
+  }
+
+  .helper {
+    margin-top: 12px;
+    color: #824d68;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .footer-note {
+    margin-top: 18px;
+    text-align: center;
+    color: #8c5b74;
+    font-size: 14px;
+  }
+
+  .heart {
+    position: fixed;
+    font-size: 18px;
+    opacity: .16;
+    pointer-events: none;
+    animation: float 8s linear infinite;
+  }
+
+  .heart.h1 { left: 4%; top: 10%; animation-delay: 0s; }
+  .heart.h2 { left: 88%; top: 14%; animation-delay: 1.5s; }
+  .heart.h3 { left: 9%; top: 74%; animation-delay: 3s; }
+  .heart.h4 { left: 91%; top: 70%; animation-delay: 4.5s; }
+
+  @keyframes float {
+    0% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-12px) scale(1.08); }
+    100% { transform: translateY(0px) scale(1); }
+  }
+
+  @media (max-width: 700px) {
+    .hero-head, .game-head, .hero-body, .game-body { padding: 18px; }
+    .word { font-size: 16px; padding: 8px 9px; }
+    .token { font-size: 15px; padding: 10px 8px; }
+    .gap { width: 18px; min-width: 18px; }
+    .step-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="heart h1">♥</div>
+  <div class="heart h2">♥</div>
+  <div class="heart h3">♥</div>
+  <div class="heart h4">♥</div>
+
+  <div class="page">
+    <div class="container">
+      <section id="startScreen" class="hero">
+        <div class="hero-head">
+          <h1>Игровой тренажёр: обособленные обстоятельства</h1>
+          <div class="subtitle">Розовый тренажёр для отработки деепричастных оборотов и одиночных деепричастий ♥</div>
+        </div>
+        <div class="hero-body">
+          <div class="instructions">
+            <div class="instruction"><strong>Шаг 1.</strong> Прочитайте предложение без запятых и <strong>выделите слова</strong>, которые являются обособленным обстоятельством.</div>
+            <div class="instruction"><strong>Шаг 2.</strong> После этого откроется второй блок. В нём нужно <strong>нажать между словами</strong> там, где должны стоять запятые.</div>
+            <div class="instruction"><strong>Шаг 3.</strong> Затем появится поле для заметок. Впишите, чем выражено обособленное обстоятельство: <strong>деепричастный оборот</strong> или <strong>одиночное деепричастие</strong>.</div>
+            <div class="instruction"><strong>Проверка.</strong> При ошибке появится красная линия с сообщением <strong>«допущена ошибка!»</strong>. При верном ответе — зелёная линия с текстом <strong>«Всё правильно! Переходим дальше»</strong>.</div>
+          </div>
+          <button id="startBtn" class="btn">Начать игру</button>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="game-card hidden">
+        <div class="game-head">
+          <h2>Тренажёр</h2>
+          <div class="subtitle">Сначала выделение, потом запятые, потом запись в поле заметок.</div>
+        </div>
+        <div class="game-body">
+          <div class="topbar">
+            <div class="progress-wrap">
+              <div class="progress-text" id="progressText">Предложение 1 из 30</div>
+              <div class="progress-line"><div id="progressFill" class="progress-fill"></div></div>
+            </div>
+            <button id="restartBtn" class="btn btn-secondary" type="button">Начать заново</button>
+          </div>
+
+          <div class="step">
+            <h3 class="step-title">1. Выделите, что относится к обособленному обстоятельству.</h3>
+          </div>
+
+          <div class="sentence-panel">
+            <div class="sentence-label" id="sentenceLabel">Предложение</div>
+            <div class="sentence-words" id="sentenceWords"></div>
+            <div class="check-btns">
+              <button id="checkSelectionBtn" class="btn" type="button">Проверить выделение</button>
+              <button id="clearSelectionBtn" class="btn btn-secondary" type="button">Сбросить выделение</button>
+            </div>
+          </div>
+
+          <div id="punctStep" class="step hidden">
+            <h3 class="step-title">2. Расставьте запятые, где это необходимо.</h3>
+            <div id="boundaryZone" class="boundary-zone"></div>
+            <div class="check-btns">
+              <button id="checkPunctuationBtn" class="btn" type="button">Проверить запятые</button>
+              <button id="clearPunctuationBtn" class="btn btn-secondary" type="button">Сбросить запятые</button>
+            </div>
+          </div>
+
+          <div id="noteStep" class="step hidden">
+            <h3 class="step-title">3. Чем выражено обособленное обстоятельство?</h3>
+            <div class="check-btns">
+              <button id="typePhraseBtn" class="btn" type="button">Деепричастный оборот</button>
+              <button id="typeSingleBtn" class="btn btn-secondary" type="button">Одиночное деепричастие</button>
+            </div>
+          </div>
+
+          <div id="feedback" class="hidden"></div>
+
+          <div id="nextWrap" class="check-btns hidden">
+            <button id="nextBtn" class="btn" type="button">Следующее предложение</button>
+          </div>
+
+          <div id="finalScreen" class="hidden">
+            <div class="feedback ok">Всё правильно! Тренажёр пройден до конца ♥</div>
+            <div class="footer-note">Можно нажать «Начать заново» и пройти все предложения ещё раз.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const DATA = [{"id": 1, "sentence": "Ветер пронесся по лесу срывая с деревьев пожелтевшие листья", "phrase": "срывая с деревьев пожелтевшие листья", "type": "деепричастный оборот", "start": 4, "end": 9, "commas": [4]}, {"id": 2, "sentence": "Улыбаясь маленький мальчик посмотрел на свою маму", "phrase": "Улыбаясь", "type": "одиночное деепричастие", "start": 0, "end": 1, "commas": [1]}, {"id": 3, "sentence": "Соседская собака громко лая выбежала из открытых ворот", "phrase": "громко лая", "type": "деепричастный оборот", "start": 2, "end": 4, "commas": [2, 4]}, {"id": 4, "sentence": "Я быстро шел по узкой улице размахивая руками", "phrase": "размахивая руками", "type": "деепричастный оборот", "start": 6, "end": 8, "commas": [6]}, {"id": 5, "sentence": "Испугавшись резкого звука птицы мгновенно взлетели в небо", "phrase": "Испугавшись резкого звука", "type": "деепричастный оборот", "start": 0, "end": 3, "commas": [3]}, {"id": 6, "sentence": "Старик тихо сидел на деревянной скамейке опираясь на массивную трость", "phrase": "опираясь на массивную трость", "type": "деепричастный оборот", "start": 6, "end": 10, "commas": [6]}, {"id": 7, "sentence": "Обернувшись назад девочка приветливо помахала нам рукой", "phrase": "Обернувшись назад", "type": "деепричастный оборот", "start": 0, "end": 2, "commas": [2]}, {"id": 8, "sentence": "Пушистый кот мурлыча свернулся уютным клубком на диване", "phrase": "мурлыча", "type": "одиночное деепричастие", "start": 2, "end": 3, "commas": [2, 3]}, {"id": 9, "sentence": "Прочитав интересную книгу старший брат рассказал мне ее сюжет", "phrase": "Прочитав интересную книгу", "type": "деепричастный оборот", "start": 0, "end": 3, "commas": [3]}, {"id": 10, "sentence": "Осенний дождь уныло барабанил по крыше навевая грустные мысли", "phrase": "навевая грустные мысли", "type": "деепричастный оборот", "start": 6, "end": 9, "commas": [6]}, {"id": 11, "sentence": "Студенты внимательно слушали лекцию профессора записывая каждое слово", "phrase": "записывая каждое слово", "type": "деепричастный оборот", "start": 5, "end": 8, "commas": [5]}, {"id": 12, "sentence": "Тяжело вздохнув мать медленно поднялась со старого стула", "phrase": "Тяжело вздохнув", "type": "деепричастный оборот", "start": 0, "end": 2, "commas": [2]}, {"id": 13, "sentence": "Вечернее солнце садилось за горизонт окрашивая облака в багровый цвет", "phrase": "окрашивая облака в багровый цвет", "type": "деепричастный оборот", "start": 5, "end": 10, "commas": [5]}, {"id": 14, "sentence": "Заметив меня вдалеке школьный друг радостно замахал рукой", "phrase": "Заметив меня вдалеке", "type": "деепричастный оборот", "start": 0, "end": 3, "commas": [3]}, {"id": 15, "sentence": "Первые снежинки кружились в холодном воздухе медленно опускаясь на землю", "phrase": "медленно опускаясь на землю", "type": "деепричастный оборот", "start": 6, "end": 10, "commas": [6]}, {"id": 16, "sentence": "Сухие листья тихо падали устилая дорожки городского парка золотым ковром", "phrase": "устилая дорожки городского парка золотым ковром", "type": "деепричастный оборот", "start": 4, "end": 10, "commas": [4]}, {"id": 17, "sentence": "Положив голову на вытянутые лапы верный пес грустно смотрел на дверь", "phrase": "Положив голову на вытянутые лапы", "type": "деепричастный оборот", "start": 0, "end": 5, "commas": [5]}, {"id": 18, "sentence": "Горная река бурля и пенясь стремительно несла свои воды к морю", "phrase": "бурля и пенясь", "type": "деепричастный оборот", "start": 2, "end": 5, "commas": [2, 5]}, {"id": 19, "sentence": "Успешно закончив сложную работу уставший отец пошел отдыхать", "phrase": "Успешно закончив сложную работу", "type": "деепричастный оборот", "start": 0, "end": 4, "commas": [4]}, {"id": 20, "sentence": "Легковой автомобиль резко затормозив остановился прямо у пешеходного перехода", "phrase": "резко затормозив", "type": "деепричастный оборот", "start": 2, "end": 4, "commas": [2, 4]}, {"id": 21, "sentence": "Девочка звонко пела знакомую песню перебирая струны акустической гитары", "phrase": "перебирая струны акустической гитары", "type": "деепричастный оборот", "start": 5, "end": 9, "commas": [5]}, {"id": 22, "sentence": "Увидев вдалеке знакомого я поспешно перешел на другую сторону улицы", "phrase": "Увидев вдалеке знакомого", "type": "деепричастный оборот", "start": 0, "end": 3, "commas": [3]}, {"id": 23, "sentence": "Высокие деревья сильно раскачивались под порывами ветра роняя сухие ветки", "phrase": "роняя сухие ветки", "type": "деепричастный оборот", "start": 7, "end": 10, "commas": [7]}, {"id": 24, "sentence": "Довольно зажмурив глаза рыжий котенок грелся на лучах утреннего солнца", "phrase": "Довольно зажмурив глаза", "type": "деепричастный оборот", "start": 0, "end": 3, "commas": [3]}, {"id": 25, "sentence": "Опытный мастер работал напевая себе под нос веселую мелодию", "phrase": "напевая себе под нос веселую мелодию", "type": "деепричастный оборот", "start": 3, "end": 9, "commas": [3]}, {"id": 26, "sentence": "Поднявшись на самую вершину горы уставшие туристы устроили долгий привал", "phrase": "Поднявшись на самую вершину горы", "type": "деепричастный оборот", "start": 0, "end": 5, "commas": [5]}, {"id": 27, "sentence": "Молодой спортсмен бежал по кругу стадиона тяжело дыша", "phrase": "тяжело дыша", "type": "деепричастный оборот", "start": 6, "end": 8, "commas": [6]}, {"id": 28, "sentence": "Бабушка привычно вязала шерстяные носки внимательно глядя в экран телевизора", "phrase": "внимательно глядя в экран телевизора", "type": "деепричастный оборот", "start": 5, "end": 10, "commas": [5]}, {"id": 29, "sentence": "Внимательно изучив старую карту путешественники выбрали самый короткий маршрут", "phrase": "Внимательно изучив старую карту", "type": "деепричастный оборот", "start": 0, "end": 4, "commas": [4]}, {"id": 30, "sentence": "Учитель химии объяснял новую тему рисуя мелом сложные схемы на доске", "phrase": "рисуя мелом сложные схемы на доске", "type": "деепричастный оборот", "start": 5, "end": 11, "commas": [5]}];
+let current = 0;
+let selectedWords = new Set();
+let selectedGaps = new Set();
+
+const startScreen = document.getElementById('startScreen');
+const gameScreen = document.getElementById('gameScreen');
+const sentenceWordsEl = document.getElementById('sentenceWords');
+const sentenceLabelEl = document.getElementById('sentenceLabel');
+const punctStepEl = document.getElementById('punctStep');
+const noteStepEl = document.getElementById('noteStep');
+const boundaryZoneEl = document.getElementById('boundaryZone');
+const feedbackEl = document.getElementById('feedback');
+const nextWrapEl = document.getElementById('nextWrap');
+const finalScreenEl = document.getElementById('finalScreen');
+const progressTextEl = document.getElementById('progressText');
+const progressFillEl = document.getElementById('progressFill');
+const typePhraseBtn = document.getElementById('typePhraseBtn');
+const typeSingleBtn = document.getElementById('typeSingleBtn');
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  startScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  startGame();
+});
+
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('clearSelectionBtn').addEventListener('click', () => {
+  selectedWords.clear();
+  renderSentence();
+  hideFeedback();
+});
+document.getElementById('clearPunctuationBtn').addEventListener('click', () => {
+  selectedGaps.clear();
+  renderBoundaryZone();
+  hideFeedback();
+});
+document.getElementById('checkSelectionBtn').addEventListener('click', checkSelection);
+document.getElementById('checkPunctuationBtn').addEventListener('click', checkPunctuation);
+typePhraseBtn.addEventListener('click', () => checkTypeChoice('деепричастный оборот'));
+typeSingleBtn.addEventListener('click', () => checkTypeChoice('одиночное деепричастие'));
+document.getElementById('nextBtn').addEventListener('click', nextSentence);
+
+function startGame() {
+  current = 0;
+  finalScreenEl.classList.add('hidden');
+  nextWrapEl.classList.add('hidden');
+  loadSentence();
+}
+
+function loadSentence() {
+  selectedWords = new Set();
+  selectedGaps = new Set();
+  typePhraseBtn.className = 'btn';
+  typeSingleBtn.className = 'btn btn-secondary';
+  punctStepEl.classList.add('hidden');
+  noteStepEl.classList.add('hidden');
+  nextWrapEl.classList.add('hidden');
+  finalScreenEl.classList.add('hidden');
+  hideFeedback();
+
+  const item = DATA[current];
+  sentenceLabelEl.textContent = `Предложение ${item.id}`;
+  progressTextEl.textContent = `Предложение ${current + 1} из ${DATA.length}`;
+  progressFillEl.style.width = `${((current) / DATA.length) * 100}%`;
+
+  renderSentence();
+  renderBoundaryZone();
+}
+
+function renderSentence() {
+  const item = DATA[current];
+  sentenceWordsEl.innerHTML = '';
+  item.sentence.split(' ').forEach((word, index) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'word' + (selectedWords.has(index) ? ' selected' : '');
+    btn.textContent = word;
+    btn.addEventListener('click', () => {
+      if (selectedWords.has(index)) selectedWords.delete(index);
+      else selectedWords.add(index);
+      renderSentence();
+      hideFeedback();
+    });
+    sentenceWordsEl.appendChild(btn);
+  });
+}
+
+function renderBoundaryZone() {
+  const item = DATA[current];
+  const words = item.sentence.split(' ');
+  boundaryZoneEl.innerHTML = '';
+
+  words.forEach((word, index) => {
+    const token = document.createElement('div');
+    token.className = 'token';
+    token.textContent = word;
+    boundaryZoneEl.appendChild(token);
+
+    if (index < words.length - 1) {
+      const gap = document.createElement('button');
+      gap.type = 'button';
+      gap.className = 'gap' + (selectedGaps.has(index + 1) ? ' active' : '');
+      gap.setAttribute('aria-label', `Промежуток после слова ${word}`);
+      gap.addEventListener('click', () => {
+        const key = index + 1;
+        if (selectedGaps.has(key)) selectedGaps.delete(key);
+        else selectedGaps.add(key);
+        renderBoundaryZone();
+        hideFeedback();
+      });
+      boundaryZoneEl.appendChild(gap);
+    }
+  });
+}
+
+function setEquals(a, b) {
+  if (a.size !== b.size) return false;
+  for (const val of a) if (!b.has(val)) return false;
+  return true;
+}
+
+function checkSelection() {
+  const item = DATA[current];
+  const expected = new Set();
+  for (let i = item.start; i < item.end; i++) expected.add(i);
+
+  if (setEquals(selectedWords, expected)) {
+    punctStepEl.classList.remove('hidden');
+    showFeedback(true, 'Всё правильно! Переходим дальше');
+  } else {
+    showFeedback(false, 'допущена ошибка!');
+  }
+}
+
+function checkPunctuation() {
+  const item = DATA[current];
+  const expected = new Set(item.commas);
+
+  if (setEquals(selectedGaps, expected)) {
+    noteStepEl.classList.remove('hidden');
+    showFeedback(true, 'Всё правильно! Переходим дальше');
+  } else {
+    showFeedback(false, 'допущена ошибка!');
+  }
+}
+
+function normalizeText(value) {
+  return value
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .replace(/[^а-яa-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function checkTypeChoice(choice) {
+  const item = DATA[current];
+  const value = normalizeText(choice);
+  const expected = normalizeText(item.type);
+
+  let ok = false;
+  if (expected === 'деепричастный оборот') {
+    ok = value.includes('деепричаст') && value.includes('оборот');
+  } else if (expected === 'одиночное деепричастие') {
+    ok = value.includes('одиноч') && value.includes('деепричаст');
+  }
+
+  typePhraseBtn.classList.remove('btn-correct');
+  typeSingleBtn.classList.remove('btn-correct');
+
+  if (ok) {
+    if (value.includes('оборот')) {
+      typePhraseBtn.classList.add('btn-correct');
+    } else {
+      typeSingleBtn.classList.add('btn-correct');
+    }
+
+    showFeedback(true, 'Всё правильно! Переходим дальше');
+    progressFillEl.style.width = `${((current + 1) / DATA.length) * 100}%`;
+    if (current === DATA.length - 1) {
+      nextWrapEl.classList.add('hidden');
+      finalScreenEl.classList.remove('hidden');
+    } else {
+      nextWrapEl.classList.remove('hidden');
+    }
+  } else {
+    showFeedback(false, 'допущена ошибка!');
+  }
+}
+
+function nextSentence() {
+  current += 1;
+  loadSentence();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function showFeedback(success, text) {
+  feedbackEl.className = 'feedback ' + (success ? 'ok' : 'bad');
+  feedbackEl.textContent = text;
+}
+
+function hideFeedback() {
+  feedbackEl.className = 'hidden';
+  feedbackEl.textContent = '';
+}
+</script>
+</body>
+</html>
